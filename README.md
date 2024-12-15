@@ -3,7 +3,7 @@ Parses Fortnite replay file and displays match result.
 Please feel free to folk and customise this code for your conveniences.
 
 ## Start
-Download the .exe from bin folder and run.
+Download the .exe from Pre-Built folder and run.
 
 ## Usage
 1.   Pick a Replay File using File Dialog.
