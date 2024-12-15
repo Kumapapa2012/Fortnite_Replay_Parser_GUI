@@ -71,7 +71,7 @@ namespace Fortnite_Replay_Parser_GUI
             {
                 return ofd.FileName;
             }
-            return "Replay_File_Path_here!";    
+            return null;    
         }
 
         protected IEnumerable<PlayerData> getAllPlayersInReplay()
@@ -108,7 +108,14 @@ namespace Fortnite_Replay_Parser_GUI
 
             // Show File Dialog
             this.fnReplayFilePath = getReplayFileInteractive();
-            lbl_replayFilePath.Text = this.fnReplayFilePath;
+            if (this.fnReplayFilePath != null)
+            {
+                lbl_replayFilePath.Text = this.fnReplayFilePath;
+            }
+            else
+            {
+                return;
+            }
 
             // Parse Replay File and store it to local member.
             var reader = new ReplayReader();
