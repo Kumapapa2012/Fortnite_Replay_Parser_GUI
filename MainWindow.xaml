@@ -11,7 +11,6 @@
             <ColumnDefinition Width="0*"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <TextBlock x:Name="tb_Parseed_Result" HorizontalAlignment="Center" Margin="0,119,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="290" Width="780" Background="Black" Foreground="White" Grid.Column="1"><Run Text="TextBlock"/><LineBreak/><Run Language="ja-jp" Text="rgghwerrghw"/><LineBreak/><Run Language="ja-jp"/></TextBlock>
         <Button x:Name="applyReplayFile" Content="..." Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,41,10,0" VerticalAlignment="Top" Click="Button_Click" Width="25"/>
         <Label Content="Step 1 - Choose a Replay File then click Apply:" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="lbl_replayFilePath" Grid.ColumnSpan="2" Margin="10,41,40,0" TextWrapping="Wrap" Text="Replay_File_Path_here!" VerticalAlignment="Top" Height="20" />
@@ -25,6 +24,7 @@
             Grid.Column="1" 
             SelectionChanged="ComboBox_SelectionChanged" 
             />
+        <TextBox x:Name="tb_Parseed_Result" HorizontalAlignment="Center" Margin="0,119,0,0" TextWrapping="Wrap" Text="TextBox&#xD;&#xA;" VerticalAlignment="Top" Width="780" Height="305" Grid.Column="1"/>
 
     </Grid>
 </Window>
