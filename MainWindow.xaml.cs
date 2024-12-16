@@ -155,10 +155,11 @@ namespace Fortnite_Replay_Parser_GUI
             if (this.fnReplayData.GameData.UtcTimeStartedMatch.HasValue)
             {
                 // Match Date Time
+                // To do: End time should be calc from   "Info": "LengthInMs": 1290238,
                 var started_at = this.fnReplayData.GameData.UtcTimeStartedMatch.Value.ToLocalTime();
                 var match_date_time = String.Format("Started at : {0}\nEnded at :{1}\n",
                     started_at,
-                    started_at.AddSeconds(this.fnReplayData.GameData.MatchEndTime ?? 0));
+                    started_at.AddMilliseconds(Convert.ToInt32(this.fnReplayData.Info.LengthInMs)));
 
                 // eliminations
                 var eliminations = (this.fnReplayData.Eliminations.Where(c => c.Eliminator == player.PlayerId.ToUpper()).ToList());
