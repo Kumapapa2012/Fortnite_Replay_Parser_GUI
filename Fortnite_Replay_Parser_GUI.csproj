@@ -12,10 +12,15 @@
 	<SelfContained>true</SelfContained>
 	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<Configurations>Debug;Release;Publish</Configurations>
   </PropertyGroup>
+	
+	<Target Name="PostPublish" AfterTargets="Publish">
+		<Exec Command="&quot;C:\Program Files\7-Zip\7z.exe&quot; a -tzip $(ProjectDir)Fortnite_Replay_Parser_GUI.zip $(ProjectDir)Published-Exe/*" />
+		<Exec Command="rmdir  $(ProjectDir)Published-Exe /s /q" />
+	</Target>
 
-  <ItemGroup>
+	<ItemGroup>
     <PackageReference Include="FortniteReplayReader" Version="2.4.0" />
   </ItemGroup>
-
 </Project>
