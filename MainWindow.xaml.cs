@@ -172,6 +172,7 @@ namespace Fortnite_Replay_Parser_GUI
                     started_at,
                     started_at.AddMilliseconds(Convert.ToInt32(this.fnReplayData.Info.LengthInMs)));
 
+
                 // PlayerData : Placement == null : NPCs , Placement != null : Players
                 var playerData_except_NPCs = fnReplayData.PlayerData.Where(o => o.Placement != null);
                 var players_total = String.Format("Total Players: {0}", playerData_except_NPCs.Count());
@@ -181,6 +182,7 @@ namespace Fortnite_Replay_Parser_GUI
                                 , human_players.Count()
                                 , playerData_except_NPCs.Count() - human_players.Count()
                                 );
+
 
                 // eliminations
                 var eliminations = (this.fnReplayData.Eliminations.Where(c => c.Eliminator == player.PlayerId.ToUpper()).ToList());
