@@ -27,6 +27,10 @@ namespace Fortnite_Replay_Parser_GUI
     {
         String fnReplayDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)+"\\FortniteGame\\Saved\\Demos";
         String fnReplayFilePath;
+
+        ComboBoxItem_Player fnSelectedPlayer;
+        int fnTimingOffset;
+
         FortniteReplayReader.Models.FortniteReplay fnReplayData;
 
         static string FormNumber(int num)
@@ -138,19 +142,26 @@ namespace Fortnite_Replay_Parser_GUI
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Get PlayerData
-            ComboBoxItem_Player? selectedItem = cmb_Players_In_Replay.SelectedItem as ComboBoxItem_Player;
+           this.fnSelectedPlayer = (ComboBoxItem_Player)cmb_Players_In_Replay.SelectedItem;
+
+            // Get Offset
+            int offset = Int32.Parse(TimeAdjustment.Text);
+
             // Parse Data and update 
-            // tb_Parseed_Result.Text = selectedItem != null ? selectedItem.getPlayer().PlayerId : "";
-            if (selectedItem != null && selectedItem.getPlayer().PlayerId != null)
+            UpdateMatchResult();
+        }
+
+        private void UpdateMatchResult()
+        {
+            if (this.fnSelectedPlayer != null && this.fnSelectedPlayer.getPlayer().PlayerId != null)
             {
-                tb_Parseed_Result.Text = getMatchData(selectedItem.getPlayer());
+                tb_Parseed_Result.Text = getMatchData(fnSelectedPlayer.getPlayer(), this.fnTimingOffset);
             }
         }
 
-        private String getMatchData(PlayerData player)
+        private String getMatchData(PlayerData player, int offset)
         {
             String ret = "";
-            int offset = 5;
             // Match
             if (this.fnReplayData.GameData.UtcTimeStartedMatch.HasValue)
             {
@@ -160,6 +171,16 @@ namespace Fortnite_Replay_Parser_GUI
                 var match_date_time = String.Format("Started at : {0}\nEnded at :{1}\n",
                     started_at,
                     started_at.AddMilliseconds(Convert.ToInt32(this.fnReplayData.Info.LengthInMs)));
+
+                // PlayerData : Placement == null : NPCs , Placement != null : Players
+                var playerData_except_NPCs = fnReplayData.PlayerData.Where(o => o.Placement != null);
+                var players_total = String.Format("Total Players: {0}", playerData_except_NPCs.Count());
+
+                var human_players = playerData_except_NPCs.Where(o => o.IsBot == false);
+                var players_counts = String.Format("Human Players : {0} / Bots : {1}"
+                                , human_players.Count()
+                                , playerData_except_NPCs.Count() - human_players.Count()
+                                );
 
                 // eliminations
                 var eliminations = (this.fnReplayData.Eliminations.Where(c => c.Eliminator == player.PlayerId.ToUpper()).ToList());
@@ -174,7 +195,7 @@ namespace Fortnite_Replay_Parser_GUI
 
                         var botKill = false;
                         var killedPlayerData = this.fnReplayData.PlayerData.Where(d => d.PlayerId == eliminations[i].EliminatedInfo.Id.ToUpper()).ToList();
-                        if (killedPlayerData.Count() > 0 && killedPlayerData[0].IsBot)
+                        if (killedPlayerData.Count > 0 && killedPlayerData[0].IsBot)
                         {
                             botKill = true;
                         }
@@ -202,14 +223,31 @@ namespace Fortnite_Replay_Parser_GUI
                 {
                     game_result += "==== Victory Royale!! ====";
                 }
-                ret = String.Format("======== Game Stats for {0} =========\n{1}\nGame Results\n{2}", 
+                ret = String.Format("======== Game Stats for {0} =========\n{1}\n{2}\n{3}\nGame Results\n{4}", 
                     player.PlayerName,
                     match_date_time,
+                    players_total,
+                    players_counts,
                     game_result
                     );
 
             }
             return ret;
         }
+
+
+        private void TimeAdjustment_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (Int32.TryParse(TimeAdjustment.Text, out int offset)) {
+                this.fnTimingOffset = offset;
+                e.Handled = true;
+                UpdateMatchResult();
+            }
+            else
+            {
+                e.Handled = false;
+            }
+        }
+
     }
 }

@@ -5,6 +5,11 @@ VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fortnite_Replay_Parser_GUI", "Fortnite_Replay_Parser_GUI.csproj", "{BE2EC736-11AE-4A6C-847C-C7A8E8D826D8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{33AC817D-E044-4871-BA71-BF5BA081612E}"
+	ProjectSection(SolutionItems) = preProject
+		publish.bat = publish.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
