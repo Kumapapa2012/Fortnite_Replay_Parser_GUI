@@ -1,24 +1,10 @@
-﻿using System.IO;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Win32;
-using FortniteReplayReader; // Fortnite Replay Reader - https://www.nuget.org/packages/FortniteReplayReader
-using Unreal.Core.Models;
-using FortniteReplayReader.Models;
-using System.ComponentModel;
-using System.Numerics;
-using FortniteReplayReader.Models.NetFieldExports;
 
 namespace Fortnite_Replay_Parser_GUI
 {
+
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -28,46 +14,25 @@ namespace Fortnite_Replay_Parser_GUI
         String fnReplayDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)+"\\FortniteGame\\Saved\\Demos";
         String fnReplayFilePath;
 
-        ComboBoxItem_Player fnSelectedPlayer;
-        int fnTimingOffset;
+        FortniteReplayHelper fortniteReplayHelper;
+        FortniteReplayHelper.ComboBoxItem_Player fnSelectedPlayer;
 
-        // Looking at player data, NPC has TeamIndex 2 and players have 3 or more.
-        const int MINIMUM_TEAM_INDEX_FOR_PLAYERS = 3;
+        int fnTimingOffset = 0; // Time adjustment in seconds, default is 0.
 
-        FortniteReplayReader.Models.FortniteReplay fnReplayData;
-
-        static string FormNumber(int num)
-        {
-            if (num <= 0) return num.ToString();
-            var sp = "";
-            if (num < 10) sp = " ";
-
-            switch (num % 100)
-            {
-                case 11:
-                case 12:
-                case 13:
-                    return sp + num + "th";
-            }
-
-            switch (num % 10)
-            {
-                case 1:
-                    return sp + num + "st";
-                case 2:
-                    return sp + num + "nd";
-                case 3:
-                    return sp + num + "rd";
-                default:
-                    return sp + num + "th";
-            }
-        }
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
+
+        /// <summary>
+        /// Opens a file dialog to allow the user to select a replay file interactively.
+        /// </summary>
+        /// <remarks>The method displays an open file dialog with a filter for files with the ".replay"
+        /// extension. If the user selects a file and confirms, the full path to the selected file is returned. If the
+        /// user cancels the dialog, the method returns <see langword="null"/>.</remarks>
+        /// <returns>The full path of the selected replay file, or <see langword="null"/> if the user cancels the dialog.</returns>
         protected string getReplayFileInteractive()
         {
             OpenFileDialog ofd = new OpenFileDialog();
@@ -81,38 +46,21 @@ namespace Fortnite_Replay_Parser_GUI
             return null;    
         }
 
-        protected IEnumerable<PlayerData> getAllPlayersInReplay()
-        {
-            return this.fnReplayData.PlayerData.Where(o => o.TeamIndex >= MINIMUM_TEAM_INDEX_FOR_PLAYERS);
-        }
-
-        public class ComboBoxItem_Player
-        {
-            private string _label;
-            private PlayerData _player;
-
-            public ComboBoxItem_Player(string label, PlayerData player)
-            {
-                _label = label;
-                _player = player;
-            }
-            public PlayerData getPlayer()
-            {
-                return _player;
-            }
-
-            public override string ToString()
-            {
-                return _label;
-            }
-        }
+        /// <summary>
+        /// Handles the click event of the button to load and display player data from a Fortnite replay file.
+        /// </summary>
+        /// <remarks>This method clears the current player list, prompts the user to select a replay file,
+        /// and populates  the ComboBox with player information extracted from the selected replay file. The player list
+        /// is  sorted by player name before being displayed.</remarks>
+        /// <param name="sender">The source of the event, typically the button that was clicked.</param>
+        /// <param name="e">The event data associated with the click event.</param>
 
         private void Button_Click(object sender, RoutedEventArgs e) 
         {
             // Clear the data
             cmb_Players_In_Replay.Items.Clear();
 
-            // Show File Dialog
+            // Show File Dialog for selecting a replay file
             this.fnReplayFilePath = getReplayFileInteractive();
             if (this.fnReplayFilePath != null)
             {
@@ -123,28 +71,39 @@ namespace Fortnite_Replay_Parser_GUI
                 return;
             }
 
-            // Parse Replay File and store it to local member.
-            var reader = new ReplayReader();
-            this.fnReplayData = reader.ReadReplay(this.fnReplayFilePath);
+            // Replay ファイルからプレイヤーリストを取得し Deserialize
+            this.fortniteReplayHelper = new FortniteReplayHelper();
+            var players = fortniteReplayHelper.GetAllPlayersInReplay(this.fnReplayFilePath);
 
-            // Add Epic IDs and Names to Combo Box - Sort by PlayerName 
-            var players = getAllPlayersInReplay();
+            // プレイヤー名でソートする
             var players_sorted = players.OrderBy(player => player.PlayerName);
 
 
+            // ComboBoxにプレイヤーを追加する
             foreach (var item in players_sorted)
             {
                 var label = String.Format("{0}: {1} - {2}", item.PlayerName, item.PlayerId, item.IsBot ? "bot" : "human");
-                var obj_comboItem = new ComboBoxItem_Player(label, item);
+                var obj_comboItem = new FortniteReplayHelper.ComboBoxItem_Player(label, item);
                 cmb_Players_In_Replay.Items.Add(obj_comboItem);
             }
 
+            // 基本情報を表示させる
+            UpdateMatchResult();
+
         }
 
+        /// <summary>
+        /// Handles the selection change event for the player combo box.
+        /// </summary>
+        /// <remarks>This method updates the selected player data and adjusts the match result based on
+        /// the current time offset. Ensure that the combo box contains valid player items and that the time adjustment
+        /// input is a valid integer.</remarks>
+        /// <param name="sender">The source of the event, typically the combo box.</param>
+        /// <param name="e">The event data containing information about the selection change.</param>
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Get PlayerData
-           this.fnSelectedPlayer = (ComboBoxItem_Player)cmb_Players_In_Replay.SelectedItem;
+           this.fnSelectedPlayer = (FortniteReplayHelper.ComboBoxItem_Player)cmb_Players_In_Replay.SelectedItem;
 
             // Get Offset
             int offset = Int32.Parse(TimeAdjustment.Text);
@@ -153,89 +112,40 @@ namespace Fortnite_Replay_Parser_GUI
             UpdateMatchResult();
         }
 
+        /// <summary>
+        /// Updates the match result for the currently selected player.
+        /// </summary>
+        /// <remarks>This method retrieves match data for the selected player and updates the parsed
+        /// result text. The selected player must not be null, and the player's ID must be valid.</remarks>
         private void UpdateMatchResult()
         {
+            if (this.fortniteReplayHelper == null)
+            {
+                // FortniteReplayHelperがnullの場合は何もしない
+                return;
+            }
+
             if (this.fnSelectedPlayer != null && this.fnSelectedPlayer.getPlayer().PlayerId != null)
             {
-                tb_Parseed_Result.Text = getMatchData(fnSelectedPlayer.getPlayer(), this.fnTimingOffset);
+                // 指定されたプレイヤーのマッチデータ取得
+                tb_Parseed_Result.Text = this.fortniteReplayHelper.GetMatchData(fnSelectedPlayer.getPlayer(), this.fnTimingOffset);
             }
-        }
-
-        private String getMatchData(PlayerData player, int offset)
-        {
-            String ret = "";
-            // Match
-            if (this.fnReplayData.GameData.UtcTimeStartedMatch.HasValue)
+            else
             {
-                // Match Date Time
-                // To do: End time should be calc from   "Info": "LengthInMs": 1290238,
-                var started_at = this.fnReplayData.GameData.UtcTimeStartedMatch.Value.ToLocalTime();
-                var match_date_time = String.Format("Started at : {0}\nEnded at :{1}\n",
-                    started_at,
-                    started_at.AddMilliseconds(Convert.ToInt32(this.fnReplayData.Info.LengthInMs)));
-                var playerData_except_NPCs = getAllPlayersInReplay();
-                var players_total = String.Format("Total Players: {0}", playerData_except_NPCs.Count());
-
-                var human_players = playerData_except_NPCs.Where(o => o.IsBot == false);
-                var players_counts = String.Format("Human Players : {0} / Bots : {1}"
-                                , human_players.Count()
-                                , playerData_except_NPCs.Count() - human_players.Count()
-                                );
-
-                // eliminations
-                var eliminations = (this.fnReplayData.Eliminations.Where(c => c.Eliminator == player.PlayerId.ToUpper()).ToList());
-
-                String game_result = "================\n";
-                // List Any Kills
-                if (eliminations.Count > 0)
-                {
-                    for (var i = 0; i < eliminations.Count(); i++)
-                    {
-                        var killedAt = DateTime.ParseExact(eliminations[i].Time, "mm:ss", null);
-
-                        var botKill = false;
-                        var killedPlayerData = this.fnReplayData.PlayerData.Where(d => d.PlayerId == eliminations[i].EliminatedInfo.Id.ToUpper()).ToList();
-                        if (killedPlayerData.Count > 0 && killedPlayerData[0].IsBot)
-                        {
-                            botKill = true;
-                        }
-                        game_result += String.Format("{0}: {1} - {2}({3})\n",
-                            FormNumber(i + 1),
-                            killedAt.AddSeconds(offset).ToString("mm:ss"),
-                            killedPlayerData[0].PlayerName,
-                            botKill ? "bot" : "human");
-                    }
-                }
-
-                // Ended up with...
-                var eliminated = (this.fnReplayData.Eliminations.Where(c => c.Eliminated == player.PlayerId.ToUpper()).ToList());
-                if (eliminated.Count > 0)
-                {
-                    // You lose.
-                    var eliminator_data = this.fnReplayData.PlayerData.Where(d => d.PlayerId == eliminated[0].EliminatorInfo.Id.ToUpper()).ToList();
-                        game_result += String.Format("Eliminated at {0} by {1}({2})",
-                        eliminated[0].Time,
-                        eliminator_data[0].PlayerName,
-                        eliminator_data[0].IsBot ? "bot":"human"
-                        );
-                }
-                else
-                {
-                    game_result += "==== Victory Royale!! ====";
-                }
-                ret = String.Format("======== Game Stats for {0} =========\n{1}\n{2}\n{3}\nGame Results\n{4}", 
-                    player.PlayerName,
-                    match_date_time,
-                    players_total,
-                    players_counts,
-                    game_result
-                    );
-
+                // プレイヤーが選択されていない場合は基本のマッチデータを取得
+                tb_Parseed_Result.Text = this.fortniteReplayHelper.GetMatchData(null, this.fnTimingOffset);
             }
-            return ret;
         }
 
-
+        /// <summary>
+        /// Handles the text change event for the time adjustment input. Updates the timing offset if the input is a
+        /// valid integer.
+        /// </summary>
+        /// <remarks>If the input text can be parsed as an integer, the timing offset is updated and the
+        /// event is marked as handled. Otherwise, the event is not handled, and the timing offset remains
+        /// unchanged.</remarks>
+        /// <param name="sender">The source of the event, typically the control where the text change occurred.</param>
+        /// <param name="e">Provides data for the text change event, including information about the change.</param>
         private void TimeAdjustment_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (Int32.TryParse(TimeAdjustment.Text, out int offset)) {
