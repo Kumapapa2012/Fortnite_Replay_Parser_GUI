@@ -6,7 +6,7 @@ Timestamps in Result can be used for Youtube video description.
 Please feel free to folk and customise this code.
 
 ## Building
-Make sure you have .NET 8.0 or later installed.
+Make sure you have .NET 9.0 SDK or later installed.
 
 Download the source code and open it in Visual Studio 2022 or later and build the solution in Release mode to generate the executable file.
 
