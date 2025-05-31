@@ -173,8 +173,6 @@ namespace Fortnite_Replay_Parser_GUI
                 var match_date_time = String.Format("Started at : {0}\nEnded at :{1}\n",
                     started_at,
                     started_at.AddMilliseconds(Convert.ToInt32(this.fnReplayData.Info.LengthInMs)));
-
-                // PlayerData : Placement == null : NPCs , Placement != null : Players
                 var playerData_except_NPCs = getAllPlayersInReplay();
                 var players_total = String.Format("Total Players: {0}", playerData_except_NPCs.Count());
 
