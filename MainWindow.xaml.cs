@@ -54,6 +54,7 @@ namespace Fortnite_Replay_Parser_GUI
         /// is  sorted by player name before being displayed.</remarks>
         /// <param name="sender">The source of the event, typically the button that was clicked.</param>
         /// <param name="e">The event data associated with the click event.</param>
+
         private void Button_Click(object sender, RoutedEventArgs e) 
         {
             // Clear the data
