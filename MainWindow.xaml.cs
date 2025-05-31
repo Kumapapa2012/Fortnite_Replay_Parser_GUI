@@ -31,6 +31,9 @@ namespace Fortnite_Replay_Parser_GUI
         ComboBoxItem_Player fnSelectedPlayer;
         int fnTimingOffset;
 
+        // Looking at player data, NPC has TeamIndex 2 and players have 3 or more.
+        const int MINIMUM_TEAM_INDEX_FOR_PLAYERS = 3;
+
         FortniteReplayReader.Models.FortniteReplay fnReplayData;
 
         static string FormNumber(int num)
@@ -80,8 +83,7 @@ namespace Fortnite_Replay_Parser_GUI
 
         protected IEnumerable<PlayerData> getAllPlayersInReplay()
         {
-            var playerData_except_NPCs = this.fnReplayData.PlayerData.Where(o => o.Placement != null);
-            return playerData_except_NPCs;
+            return this.fnReplayData.PlayerData.Where(o => o.TeamIndex >= MINIMUM_TEAM_INDEX_FOR_PLAYERS);
         }
 
         public class ComboBoxItem_Player
@@ -171,10 +173,7 @@ namespace Fortnite_Replay_Parser_GUI
                 var match_date_time = String.Format("Started at : {0}\nEnded at :{1}\n",
                     started_at,
                     started_at.AddMilliseconds(Convert.ToInt32(this.fnReplayData.Info.LengthInMs)));
-
-
-                // PlayerData : Placement == null : NPCs , Placement != null : Players
-                var playerData_except_NPCs = fnReplayData.PlayerData.Where(o => o.Placement != null);
+                var playerData_except_NPCs = getAllPlayersInReplay();
                 var players_total = String.Format("Total Players: {0}", playerData_except_NPCs.Count());
 
                 var human_players = playerData_except_NPCs.Where(o => o.IsBot == false);
@@ -182,7 +181,6 @@ namespace Fortnite_Replay_Parser_GUI
                                 , human_players.Count()
                                 , playerData_except_NPCs.Count() - human_players.Count()
                                 );
-
 
                 // eliminations
                 var eliminations = (this.fnReplayData.Eliminations.Where(c => c.Eliminator == player.PlayerId.ToUpper()).ToList());
