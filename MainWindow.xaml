@@ -18,7 +18,7 @@
         </Grid.ColumnDefinitions>
         <Button x:Name="applyReplayFile" Content="..." HorizontalAlignment="Right" Margin="0,41,10,0" VerticalAlignment="Top" Click="Button_Click" Width="25" Grid.Column="6" Height="20"/>
         <Label Content="Step 1 - Choose a Replay File then click Apply:" Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="26" Width="237"/>
-        <TextBox x:Name="lbl_replayFilePath" Grid.ColumnSpan="7" Margin="10,41,40,0" TextWrapping="Wrap" Text="Replay_File_Path_here!" VerticalAlignment="Top" Height="20" />
+        <TextBox x:Name="lbl_replayFilePath" Grid.ColumnSpan="7" Margin="10,41,40,0" TextWrapping="Wrap" Text="Replay_File_Path_here!" VerticalAlignment="Top" Height="20" IsReadOnly="True" />
         <Label Content="Step 2 - Pick an Epic ID to track:" Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="10,66,0,0" VerticalAlignment="Top" Height="26" Width="178"/>
         <ComboBox 
             x:Name="cmb_Players_In_Replay" 
@@ -32,6 +32,7 @@
         <TextBox x:Name="tb_Parseed_Result" HorizontalAlignment="Left" Margin="10,119,0,0" TextWrapping="Wrap" Text="TextBox&#xD;&#xA;" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" Width="780" Height="300" Grid.Column="1" Grid.ColumnSpan="6" />
         <TextBox x:Name="TimeAdjustment" Grid.ColumnSpan="2" HorizontalAlignment="Left" HorizontalContentAlignment="Right"  Margin="13,428,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120" TextChanged="TimeAdjustment_TextChanged" Height="22" Grid.Column="2"/>
         <Label Content="Time Offset for Video -" Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="10,426,0,0" VerticalAlignment="Top" Width="142" Height="26"/>
+        <Button x:Name="btn_SaveReplayJson" Grid.Column="5" Content="Save Replay Data as JSON..." HorizontalAlignment="Left" Margin="284,429,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.525,0.039" Click="Button_Click_btn_SaveReplayJson" Width="166" Grid.ColumnSpan="2"/>
 
     </Grid>
 </Window>

@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using FortniteReplayReader.Models;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
 using FortniteReplayReader;
+using FortniteReplayReader.Models;
+using Unreal.Core.Models;
 
 namespace Fortnite_Replay_Parser_GUI
 {
@@ -12,19 +17,21 @@ namespace Fortnite_Replay_Parser_GUI
         // Looking at player data, NPC has TeamIndex 2 and players have 3 or more.
         const int MINIMUM_TEAM_INDEX_FOR_PLAYERS = 3;
 
-        FortniteReplayReader.Models.FortniteReplay fnReplayData;
+        private FortniteReplayReader.Models.FortniteReplay fnReplayData;
+
+
+        public FortniteReplayHelper(string fnReplayFilePath)
+        {
+            var reader = new ReplayReader();
+            this.fnReplayData = reader.ReadReplay(fnReplayFilePath);
+        }
+
 
         /// <summary>
-        /// Formats a number as an ordinal string representation.
+        /// Converts an integer to its ordinal string representation (e.g., 1st, 2nd, 3rd, 4th).
+        /// Handles special cases for numbers ending in 11, 12, or 13, which always use the "th" suffix.
+        /// Returns the number as a string without a suffix if the value is less than or equal to zero.
         /// </summary>
-        /// <remarks>This method handles special cases for numbers ending in 11, 12, or 13, which always
-        /// use the "th" suffix.</remarks>
-        /// <param name="num">The number to format. Must be a non-negative integer.</param>
-        /// <returns>A string representing the ordinal form of the number. For example: <list type="bullet">
-        /// <item><description>"1st" for 1</description></item> <item><description>"2nd" for 2</description></item>
-        /// <item><description>"3rd" for 3</description></item> <item><description>"4th" for 4</description></item>
-        /// </list> If the number is less than or equal to zero, the method returns the number as a string without an
-        /// ordinal suffix.</returns>
         public static string FormNumber(int num)
         {
             if (num <= 0) return num.ToString();
@@ -58,14 +65,10 @@ namespace Fortnite_Replay_Parser_GUI
         /// </summary>
         /// <remarks>This method processes the replay file to extract player data, excluding NPCs. Ensure
         /// the file path points to a valid replay file.</remarks>
-        /// <param name="fnReplayFilePath">The file path of the replay file to be parsed. Must be a valid, non-null, and non-empty string.</param>
         /// <returns>An <see cref="IEnumerable{PlayerData}"/> containing the player data extracted from the replay file.  The
         /// collection excludes non-player characters (NPCs) and will be empty if no players are found.</returns>
-        public IEnumerable<PlayerData> GetAllPlayersInReplay(string fnReplayFilePath)
+        public IEnumerable<PlayerData> GetAllPlayersInReplay()
         {
-            // Parse Replay File and store it to local member.
-            var reader = new ReplayReader();
-            this.fnReplayData = reader.ReadReplay(fnReplayFilePath);
             return GetAllPlayersInReplay_Without_NPCs();
         }
 
@@ -158,6 +161,45 @@ namespace Fortnite_Replay_Parser_GUI
                 ret = $"======== Game Stats for {player.PlayerName} =========\n{match_date_time}\n{players_total}\n{players_counts}\nGame Results\n{game_result}";
             }
             return ret;
+        }
+
+        /// <summary>
+        /// 指定されたパスにリプレイデータをJSON形式で保存します。
+        /// </summary>
+        /// <param name="replayData_json_path">保存先のファイルパス。空文字列やnullの場合は何も行いません。</param>
+        /// <remarks>
+        /// 内部で<see cref="JsonSerializer"/>を使用し、Unicode文字を含むすべてのデータをインデント付きで出力します。
+        /// 例外発生時はcatchで処理し、必要に応じてログ出力や再スローが可能です。
+        /// </remarks>
+        public void SaveReplayAsJSON(string replayData_json_path)
+        {
+            if (string.IsNullOrEmpty(replayData_json_path))
+            {
+                return;
+            }
+
+            try
+            {
+                using (var sw = new StreamWriter(replayData_json_path, false, System.Text.Encoding.UTF8))
+                {
+                    var json_options = new JsonSerializerOptions
+                    {
+                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+                        NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                        WriteIndented = true
+                    };
+                    var jsonString = JsonSerializer.Serialize(this.fnReplayData, json_options);
+
+                    // JSON データをファイルに書き込み
+                    sw.Write(jsonString);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 必要に応じてログ出力や例外の再スローを行う
+                // 例: Console.WriteLine($"JSON保存エラー: {ex.Message}");
+                throw new IOException("リプレイデータのJSON保存中にエラーが発生しました。", ex);
+            }
         }
 
         // ComboBoxItem_Player も移動
