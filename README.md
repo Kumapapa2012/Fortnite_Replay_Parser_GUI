@@ -30,6 +30,8 @@ PS D:\Fortnite_Replay_Parser_GUI> .\bin\Release\net9.0-windows\win-x64\publish\F
 4. Adjust offset to change the timing of termination events in seconds.
    - Accepts both positive/negative integer.
    - Useful for adjusting event timings on Video Recording. 
+5. Click "Save Replay Data as JSON..." to save the parsed result as a JSON file.
+
 ## Images
 ![Image1](./images/Image1.jpg)
 
