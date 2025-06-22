@@ -1,3 +1,5 @@
+using FortniteReplayReader;
+using FortniteReplayReader.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,9 +7,8 @@ using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-using FortniteReplayReader;
-using FortniteReplayReader.Models;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Enums;
 
 namespace Fortnite_Replay_Parser_GUI
 {
@@ -22,7 +23,7 @@ namespace Fortnite_Replay_Parser_GUI
 
         public FortniteReplayHelper(string fnReplayFilePath)
         {
-            var reader = new ReplayReader();
+            var reader = new ReplayReader(parseMode: ParseMode.Full);
             this.fnReplayData = reader.ReadReplay(fnReplayFilePath);
         }
 
