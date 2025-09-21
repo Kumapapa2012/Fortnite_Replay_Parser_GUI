@@ -13,9 +13,12 @@
 	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 	<Configurations>Debug;Release;Publish</Configurations>
+	<UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="FortniteReplayReader" Version="2.4.0" />
+    <PackageReference Include="Scriban" Version="6.3.0" />
+    <PackageReference Include="System.Management" Version="9.0.9" />
   </ItemGroup>
 </Project>

@@ -9,6 +9,10 @@ using System.Text.Json;
 using System.Text.Unicode;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
+using Scriban;
+using System.Management;
+using Fortnite_Replay_Parser_GUI.Templates;
+using Scriban.Runtime;
 
 namespace Fortnite_Replay_Parser_GUI
 {
@@ -21,17 +25,17 @@ namespace Fortnite_Replay_Parser_GUI
         private FortniteReplayReader.Models.FortniteReplay fnReplayData;
 
 
+        /// <summary>
+        /// 指定したリプレイファイルパスからリプレイデータを読み込み、fnReplayDataに格納します。
+        /// </summary>
         public FortniteReplayHelper(string fnReplayFilePath)
         {
             var reader = new ReplayReader(parseMode: ParseMode.Full);
             this.fnReplayData = reader.ReadReplay(fnReplayFilePath);
         }
 
-
         /// <summary>
-        /// Converts an integer to its ordinal string representation (e.g., 1st, 2nd, 3rd, 4th).
-        /// Handles special cases for numbers ending in 11, 12, or 13, which always use the "th" suffix.
-        /// Returns the number as a string without a suffix if the value is less than or equal to zero.
+        /// 数値を順位表記（1st, 2nd, 3rd, ...）の文字列に変換します。
         /// </summary>
         public static string FormNumber(int num)
         {
@@ -60,28 +64,17 @@ namespace Fortnite_Replay_Parser_GUI
             }
         }
 
-        // プレイヤーリスト取得
         /// <summary>
-        /// Retrieves a collection of all players present in the specified replay file.
+        /// NPCを除外した全プレイヤーのリストを取得します。
         /// </summary>
-        /// <remarks>This method processes the replay file to extract player data, excluding NPCs. Ensure
-        /// the file path points to a valid replay file.</remarks>
-        /// <returns>An <see cref="IEnumerable{PlayerData}"/> containing the player data extracted from the replay file.  The
-        /// collection excludes non-player characters (NPCs) and will be empty if no players are found.</returns>
         public IEnumerable<PlayerData> GetAllPlayersInReplay()
         {
             return GetAllPlayersInReplay_Without_NPCs();
         }
 
-        // NPCを除外したプレイヤーリスト取得
         /// <summary>
-        /// Retrieves all player data from the replay, excluding non-player characters (NPCs).
+        /// NPCを除外した全プレイヤーのリストを取得します（内部用）。
         /// </summary>
-        /// <remarks>This method filters the player data based on the team index, ensuring that only
-        /// actual players are included in the result. NPCs are excluded by applying a minimum team index
-        /// threshold.</remarks>
-        /// <returns>An enumerable collection of <see cref="PlayerData"/> objects representing all players in the replay,
-        /// excluding NPCs. The collection will be empty if no players meet the criteria.</returns>
         private IEnumerable<PlayerData> GetAllPlayersInReplay_Without_NPCs()
         {
             // Parse Replay File and store it to local member.
@@ -89,20 +82,9 @@ namespace Fortnite_Replay_Parser_GUI
         }
 
 
-        // マッチデータ取得
         /// <summary>
-        /// Retrieves match data for a specified player, including game statistics and elimination details.
+        /// 指定したプレイヤーのマッチデータ（戦績や統計情報）を文字列として取得します。
         /// </summary>
-        /// <remarks>This method provides detailed information about the match, including the start and
-        /// end times, the number of human and bot players, and elimination details for the specified player. If the
-        /// player was eliminated, the method includes information about the eliminator. If the player achieved victory,
-        /// the result is noted as "Victory Royale".</remarks>
-        /// <param name="player">The player whose match data is to be retrieved. If <paramref name="player"/> is <see langword="null"/>,
-        /// general match statistics are returned instead.</param>
-        /// <param name="offset">The time offset, in seconds, to adjust elimination timestamps.</param>
-        /// <returns>A string containing match statistics, including start and end times, total player counts, and elimination
-        /// details. If <paramref name="player"/> is <see langword="null"/>, the returned string contains general match
-        /// statistics.</returns>
         public string GetMatchData(PlayerData player, int offset)
         {
             var replayData = this.fnReplayData;
@@ -129,7 +111,7 @@ namespace Fortnite_Replay_Parser_GUI
                     return ret;
                 }
 
-                // Player should exists. continue to parse player data.
+                // Player exists. continue to parse player data.
                 var eliminations = replayData.Eliminations.Where(c => c.Eliminator == player.PlayerId.ToUpper()).ToList();
 
                 string game_result = "================\n";
@@ -164,14 +146,10 @@ namespace Fortnite_Replay_Parser_GUI
             return ret;
         }
 
+
         /// <summary>
-        /// 指定されたパスにリプレイデータをJSON形式で保存します。
+        /// リプレイデータをJSON形式で保存します。
         /// </summary>
-        /// <param name="replayData_json_path">保存先のファイルパス。空文字列やnullの場合は何も行いません。</param>
-        /// <remarks>
-        /// 内部で<see cref="JsonSerializer"/>を使用し、Unicode文字を含むすべてのデータをインデント付きで出力します。
-        /// 例外発生時はcatchで処理し、必要に応じてログ出力や再スローが可能です。
-        /// </remarks>
         public void SaveReplayAsJSON(string replayData_json_path)
         {
             if (string.IsNullOrEmpty(replayData_json_path))
@@ -203,7 +181,9 @@ namespace Fortnite_Replay_Parser_GUI
             }
         }
 
-        // ComboBoxItem_Player も移動
+        /// <summary>
+        /// ComboBox用のプレイヤー選択アイテムを表します。
+        /// </summary>
         public class ComboBoxItem_Player
         {
             private string _label;
@@ -223,6 +203,103 @@ namespace Fortnite_Replay_Parser_GUI
             {
                 return _label;
             }
+        }
+
+        /// <summary>
+        /// Scribanテンプレートを使用して、マッチ結果をレンダリングし文字列として返します。
+        /// </summary>
+        public string RenderMatchResultFromTemplate(PlayerData player, int offset)
+        {
+            var replayData = this.fnReplayData;
+            if (replayData == null || !replayData.GameData.UtcTimeStartedMatch.HasValue) return "";
+
+
+            // 開始・終了時刻
+            var start_time = replayData.GameData.UtcTimeStartedMatch.Value.ToLocalTime();
+            var started_at = $"{start_time}";
+            var ended_at = $"{start_time.AddMilliseconds(Convert.ToInt32(replayData.Info.LengthInMs))}";
+            var duration = $"{replayData.Info.LengthInMs / 1000 / 60}:{replayData.Info.LengthInMs / 1000 % 60}";
+
+
+            // プレイヤー集計
+            var playerData_except_NPCs = GetAllPlayersInReplay_Without_NPCs();
+            var total_players = playerData_except_NPCs.Count();
+            var human_players = playerData_except_NPCs.Count(o => !o.IsBot);
+            var bot_players = total_players - human_players;
+
+            // Scriban テンプレートを使用
+            var template = Template.Parse(MatchResult.MatchStatTemplate);
+
+            var model = new
+            {
+                started_at = started_at,
+                ended_at = ended_at,
+                duration = duration,
+                total_players = total_players,
+                human_players = human_players,
+                bot_players = bot_players,
+                player_name = player == null ? "" : player.PlayerName,
+                // game_result = game_result,
+                player_result = player == null ? "": RenderPlayerResultFromTemplate(player, offset),
+                system_info = SystemInfoHelper.GetSystemInfoText()
+            };
+
+            return template.Render(model, member => member.Name);
+        }
+
+        /// <summary>
+        /// Scribanテンプレートを使用して、指定プレイヤーの戦績結果をレンダリングし文字列として返します。
+        /// </summary>
+        public string RenderPlayerResultFromTemplate(PlayerData player, int offset)
+        {
+            var replayData = this.fnReplayData;
+            if (replayData == null || player == null) return "";
+
+            // eliminations: プレイヤーが倒した相手
+            var eliminations = replayData.Eliminations
+                .Where(c => c.Eliminator == player.PlayerId.ToUpper())
+                .Select((elim, idx) =>
+                {
+                    var killed = replayData.PlayerData.FirstOrDefault(d => d.PlayerId == elim.EliminatedInfo.Id.ToUpper());
+                    return new
+                    {
+                        time = DateTime.ParseExact(elim.Time, "mm:ss", null).AddSeconds(offset).ToString("mm:ss"),
+                        player_name = killed?.PlayerName ?? "Unknown",
+                        is_bot = killed?.IsBot ?? false,
+                        index = idx + 1
+                    };
+                }).ToList();
+
+            // eliminated: プレイヤーが倒された場合
+            var eliminated = replayData.Eliminations
+                .Where(c => c.Eliminated == player.PlayerId.ToUpper())
+                .Select(elim =>
+                {
+                    var eliminator = replayData.PlayerData.FirstOrDefault(d => d.PlayerId == elim.EliminatorInfo.Id.ToUpper());
+                    return new
+                    {
+                        time = DateTime.ParseExact(elim.Time, "mm:ss", null).AddSeconds(offset).ToString("mm:ss"),
+                        player_name = eliminator?.PlayerName ?? "Unknown",
+                        is_bot = eliminator?.IsBot ?? false
+                    };
+                }).FirstOrDefault();
+
+            // Scriban テンプレート
+            var template = Template.Parse(MatchResult.PlayerResultTemplate);
+
+            // FormNumber関数を Scriban に渡す
+            var scriptObj = new Scriban.Runtime.ScriptObject();
+            scriptObj.Import("fn_form_number", new Func<int, string>(FormNumber));
+
+            // プロパティをcontextに追加
+            scriptObj.SetValue("player_name", player.PlayerName, false);
+            scriptObj.SetValue("eliminations", eliminations, false);
+            scriptObj.SetValue("eliminated", eliminated, false);
+
+            var context = new Scriban.TemplateContext();
+            context.PushGlobal(scriptObj);
+
+            return template.Render(context);
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Fortnite_Replay_Parser_GUI
         /// <returns>The full path of the selected replay file, or <see langword="null"/> if the user cancels the dialog.</returns>
         protected string GetReplayFileInteractive()
         {
-            OpenFileDialog ofd = new OpenFileDialog();
+            Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog();
             ofd.Filter = "Replay Files (.replay)|*.replay";
             ofd.InitialDirectory = this.fnReplayDirectory;
 
@@ -156,16 +156,19 @@ namespace Fortnite_Replay_Parser_GUI
                 return;
             }
 
+            /*
             if (this.fnSelectedPlayer != null && this.fnSelectedPlayer.getPlayer().PlayerId != null)
             {
                 // 指定されたプレイヤーのマッチデータ取得
-                tb_Parseed_Result.Text = this.fortniteReplayHelper.GetMatchData(fnSelectedPlayer.getPlayer(), this.fnTimingOffset);
+                tb_Parse_Result.Text = this.fortniteReplayHelper.GetMatchData(fnSelectedPlayer.getPlayer(), this.fnTimingOffset);
             }
             else
             {
                 // プレイヤーが選択されていない場合は基本のマッチデータを取得
-                tb_Parseed_Result.Text = this.fortniteReplayHelper.GetMatchData(null, this.fnTimingOffset);
+                tb_Parse_Result.Text = this.fortniteReplayHelper.GetMatchData(null, this.fnTimingOffset);
             }
+            */
+            tb_Parse_Result.Text = this.fortniteReplayHelper.RenderMatchResultFromTemplate(fnSelectedPlayer == null ? null: fnSelectedPlayer.getPlayer(), this.fnTimingOffset);
         }
 
         /// <summary>
