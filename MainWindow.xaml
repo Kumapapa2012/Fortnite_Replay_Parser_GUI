@@ -29,7 +29,7 @@
             Grid.Column="1" 
             SelectionChanged="ComboBox_SelectionChanged" Grid.ColumnSpan="6" Height="22" 
             />
-        <TextBox x:Name="tb_Parseed_Result" HorizontalAlignment="Left" Margin="10,119,0,0" TextWrapping="Wrap" Text="TextBox&#xD;&#xA;" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" Width="780" Height="300" Grid.Column="1" Grid.ColumnSpan="6" />
+        <TextBox x:Name="tb_Parse_Result" HorizontalAlignment="Left" Margin="10,119,0,0" TextWrapping="Wrap" Text="TextBox&#xD;&#xA;" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" Width="780" Height="300" Grid.Column="1" Grid.ColumnSpan="6" />
         <TextBox x:Name="TimeAdjustment" Grid.ColumnSpan="2" HorizontalAlignment="Left" HorizontalContentAlignment="Right"  Margin="13,428,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120" TextChanged="TimeAdjustment_TextChanged" Height="22" Grid.Column="2"/>
         <Label Content="Time Offset for Video -" Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="10,426,0,0" VerticalAlignment="Top" Width="142" Height="26"/>
         <Button x:Name="btn_SaveReplayJson" Grid.Column="5" Content="Save Replay Data as JSON..." HorizontalAlignment="Left" Margin="284,429,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.525,0.039" Click="Button_Click_btn_SaveReplayJson" Width="166" Grid.ColumnSpan="2"/>
