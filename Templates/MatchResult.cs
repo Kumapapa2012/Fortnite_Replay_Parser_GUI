@@ -21,9 +21,9 @@ namespace Fortnite_Replay_Parser_GUI.Templates
             """;
 
         public static string PlayerResultTemplate = """
-            =================
+            =============================
             Player: {{ player_name }}
-            =================
+            =============================
             {{ for elim in eliminations }}
             {{ fn_form_number elim.index }}: {{ elim.time }} - {{ elim.player_name }}({{ if elim.is_bot }}bot{{ else }}human{{ end }}){{ end }}
             {{ if eliminated }}
@@ -31,7 +31,7 @@ namespace Fortnite_Replay_Parser_GUI.Templates
             {{ else }}
             ==== {{ player_name }} got a Victory Royale!! ====
             {{ end }}
-            =================            
+            =============================            
             """;
     }
 }
