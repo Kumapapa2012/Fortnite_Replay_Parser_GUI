@@ -32,7 +32,7 @@ PS D:\Fortnite_Replay_Parser_GUI> .\bin\Release\net9.0-windows\win-x64\publish\F
    - Useful for adjusting event timings on Video Recording. 
 5. Click "Save Replay Data as JSON..." to save the parsed result as a JSON file.
 
-[![Watch the video](https://github.com/Kumapapa2012/Fortnite_Replay_Parser_GUI/blob/master/Videos/Demo.mp4)]
+[![Watch the video](https://github.com/Kumapapa2012/Fortnite_Replay_Parser_GUI/blob/master/Videos/Demo.mp4)](https://github.com/Kumapapa2012/Fortnite_Replay_Parser_GUI/blob/master/Videos/Demo.mp4)
 
 ## License
 GNU AFFERO GENERAL PUBLIC LICENSE
