@@ -147,7 +147,10 @@ namespace Fortnite_Replay_Parser_GUI
             var start_time = replayData.GameData.UtcTimeStartedMatch.Value.ToLocalTime();
             var started_at = $"{start_time}";
             var ended_at = $"{start_time.AddMilliseconds(Convert.ToInt32(replayData.Info.LengthInMs))}";
-            var duration = $"{replayData.Info.LengthInMs / 1000 / 60}:{replayData.Info.LengthInMs / 1000 % 60}";
+
+            // duration を "MM:SS" フォーマットにする（分は合計分数を表示）
+            var matchLength = TimeSpan.FromMilliseconds(replayData.Info.LengthInMs);
+            var duration = $"{(int)matchLength.TotalMinutes:D2}:{matchLength.Seconds:D2}";
 
 
             // プレイヤー集計
@@ -168,7 +171,7 @@ namespace Fortnite_Replay_Parser_GUI
                 human_players = human_players,
                 bot_players = bot_players,
                 player_name = player == null ? "" : player.PlayerName,
-                player_result = player == null ? "": RenderPlayerResultFromTemplate(player, offset),
+                player_result = player == null ? "" : RenderPlayerResultFromTemplate(player, offset),
                 system_info = RenderSystemInfoFromTemplate()
             };
 
