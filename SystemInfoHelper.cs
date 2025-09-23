@@ -5,7 +5,7 @@ using System.Drawing; // 参照追加必要
 using System.Windows.Forms; // 参照追加必要
 using Microsoft.Win32;
 
-namespace Fortnite_Replay_Parser_GUI.Templates
+namespace Fortnite_Replay_Parser_GUI
 {
     public static class SystemInfoHelper
     {
@@ -75,7 +75,7 @@ namespace Fortnite_Replay_Parser_GUI.Templates
         {
             try
             {
-                var primaryScreen = System.Windows.Forms.Screen.PrimaryScreen;
+                var primaryScreen = Screen.PrimaryScreen;
                 if (primaryScreen == null)
                     return "Unknown Resolution";
                 // RefreshRate プロパティは存在しないため、解像度のみ返す
