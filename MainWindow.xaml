@@ -6,33 +6,90 @@
         xmlns:local="clr-namespace:Fortnite_Replay_Parser_GUI"
         mc:Ignorable="d"
         Title="MainWindow" Width="800" d:DesignHeight="477.686" Height="496">
-    <Grid Margin="0,0,0,-6">
+    <Grid>
+        <!-- 列: 左余白 / メイン領域（伸縮） / apply ボタン領域（固定） / 右余白 -->
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0*"/>
-            <ColumnDefinition Width="130*"/>
-            <ColumnDefinition Width="117*"/>
-            <ColumnDefinition Width="63.432"/>
-            <ColumnDefinition Width="17.568"/>
-            <ColumnDefinition Width="370*"/>
-            <ColumnDefinition Width="102*"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="10"/>
         </Grid.ColumnDefinitions>
-        <Button x:Name="applyReplayFile" Content="..." HorizontalAlignment="Right" Margin="0,41,10,0" VerticalAlignment="Top" Click="Button_Click" Width="25" Grid.Column="6" Height="20"/>
-        <Label Content="Step 1 - Choose a Replay File then click Apply:" Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="26" Width="237"/>
-        <TextBox x:Name="lbl_replayFilePath" Grid.ColumnSpan="7" Margin="10,41,40,0" TextWrapping="Wrap" Text="Replay_File_Path_here!" VerticalAlignment="Top" Height="20" IsReadOnly="True" />
-        <Label Content="Step 2 - Pick an Epic ID to track:" Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="10,66,0,0" VerticalAlignment="Top" Height="26" Width="178"/>
-        <ComboBox 
-            x:Name="cmb_Players_In_Replay" 
-            HorizontalAlignment="Left" 
-            Margin="10,92,0,0" 
-            VerticalAlignment="Top" 
-            Width="780" 
-            Grid.Column="1" 
-            SelectionChanged="ComboBox_SelectionChanged" Grid.ColumnSpan="6" Height="22" 
-            />
-        <TextBox x:Name="tb_Parse_Result" HorizontalAlignment="Left" Margin="10,119,0,0" TextWrapping="Wrap" Text="TextBox&#xD;&#xA;" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" Width="780" Height="300" Grid.Column="1" Grid.ColumnSpan="6" />
-        <TextBox x:Name="TimeAdjustment" Grid.ColumnSpan="2" HorizontalAlignment="Left" HorizontalContentAlignment="Right"  Margin="13,428,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120" TextChanged="TimeAdjustment_TextChanged" Height="22" Grid.Column="2"/>
-        <Label Content="Time Offset for Video -" Grid.ColumnSpan="3" HorizontalAlignment="Left" Margin="10,426,0,0" VerticalAlignment="Top" Width="142" Height="26"/>
-        <Button x:Name="btn_SaveReplayJson" Grid.Column="5" Content="Save Replay Data as JSON..." HorizontalAlignment="Left" Margin="284,429,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.525,0.039" Click="Button_Click_btn_SaveReplayJson" Width="166" Grid.ColumnSpan="2"/>
 
+        <!-- 行: 各行は Auto だが、結果表示だけ Star で伸縮 -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Step1 ラベル -->
+            <RowDefinition Height="Auto"/>
+            <!-- ファイルパス + Apply -->
+            <RowDefinition Height="Auto"/>
+            <!-- Step2 ラベル -->
+            <RowDefinition Height="Auto"/>
+            <!-- ComboBox -->
+            <RowDefinition Height="*"/>
+            <!-- 結果TextBox（縦に伸縮） -->
+            <RowDefinition Height="Auto"/>
+            <!-- 下部固定コントロール -->
+        </Grid.RowDefinitions>
+
+        <!-- Step 1 ラベル -->
+        <Label Content="Step 1 - Choose a Replay File then click Apply:" 
+               Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" 
+               VerticalAlignment="Center" Height="26" Margin="0,10,0,0"/>
+
+        <!-- ファイルパス（伸縮） -->
+        <TextBox x:Name="lbl_replayFilePath" 
+                 Grid.Row="1" Grid.Column="1" 
+                 VerticalAlignment="Center"
+                 Margin="0,0,30,0"
+                 TextWrapping="Wrap" Text="Replay_File_Path_here!" 
+                 Height="24" IsReadOnly="True" Grid.ColumnSpan="2" />
+
+        <!-- Apply ボタン（右側に固定） -->
+        <Button x:Name="applyReplayFile" Content="..." 
+                Grid.Row="1" Grid.Column="2"
+                HorizontalAlignment="Right" VerticalAlignment="Center"
+                Margin="0,8,0,8" Width="25" Height="24"
+                Click="Button_Click"/>
+
+        <!-- Step 2 ラベル -->
+        <Label Content="Step 2 - Pick an Epic ID to track:" 
+               Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" 
+               VerticalAlignment="Center" Height="26" Margin="0,6,0,0"/>
+
+        <!-- プレイヤー選択 ComboBox（左右に合わせて伸縮） -->
+        <ComboBox x:Name="cmb_Players_In_Replay" 
+                  Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" VerticalAlignment="Center"
+                  Margin="6,0,0,0" Height="24"
+                  SelectionChanged="ComboBox_SelectionChanged"/>
+
+        <!-- 結果テキスト（縦横とも伸縮） -->
+        <TextBox x:Name="tb_Parse_Result" 
+                 Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"
+                 Margin="6,6,0,6"
+                 TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 Text="TextBox&#xD;&#xA;"/>
+
+        <!-- 下部固定領域: 左ラベル -->
+        <Label Content="Time Offset for Video:" 
+               Grid.Row="4" Grid.Column="1"
+               HorizontalAlignment="Left" VerticalAlignment="Bottom"
+               Margin="0,0,0,5" Height="26" Grid.RowSpan="2"/>
+
+        <!-- 下部固定領域: TimeAdjustment（左寄せ、Bottom固定） -->
+        <TextBox x:Name="TimeAdjustment" 
+                 Grid.Row="5" Grid.Column="1"
+                 HorizontalAlignment="Left" VerticalAlignment="Top"
+                 Margin="124,5,0,5" Width="120" Height="22"
+                 HorizontalContentAlignment="Right"
+                 Text="0" TextChanged="TimeAdjustment_TextChanged"/>
+
+        <!-- 下部固定領域: Save ボタン（右寄せ・Bottom固定、右オフセットは列の右余白で確保） -->
+        <Button x:Name="btn_SaveReplayJson" 
+                Grid.Row="5" Grid.Column="1"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,0,5"
+                Content="Save Replay Data as JSON..." 
+                Width="166"
+                Click="Button_Click_btn_SaveReplayJson" Grid.ColumnSpan="2"/>
     </Grid>
 </Window>

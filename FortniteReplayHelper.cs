@@ -1,16 +1,11 @@
 using FortniteReplayReader;
 using FortniteReplayReader.Models;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Scriban;
-using System.Management;
 using Fortnite_Replay_Parser_GUI.Templates;
 using Scriban.Runtime;
 
@@ -80,72 +75,6 @@ namespace Fortnite_Replay_Parser_GUI
             // Parse Replay File and store it to local member.
             return this.fnReplayData.PlayerData.Where(o => o.TeamIndex >= MINIMUM_TEAM_INDEX_FOR_PLAYERS);
         }
-
-
-        /// <summary>
-        /// 指定したプレイヤーのマッチデータ（戦績や統計情報）を文字列として取得します。
-        /// </summary>
-        public string GetMatchData(PlayerData player, int offset)
-        {
-            var replayData = this.fnReplayData;
-
-            // Check if replayData is null
-            if (replayData == null) return "";
-
-            string ret = "";
-            if (replayData.GameData.UtcTimeStartedMatch.HasValue)
-            {
-                var started_at = replayData.GameData.UtcTimeStartedMatch.Value.ToLocalTime();
-                var match_date_time = $"Started : {started_at}\nEnded :{started_at.AddMilliseconds(Convert.ToInt32(replayData.Info.LengthInMs))}\n";
-
-                var playerData_except_NPCs = GetAllPlayersInReplay_Without_NPCs();
-                var players_total = $"Total Players: {playerData_except_NPCs.Count()}";
-
-                var human_players = playerData_except_NPCs.Where(o => o.IsBot == false);
-                var players_counts = $"Humans : {human_players.Count()} / Bots : {playerData_except_NPCs.Count() - human_players.Count()}";
-
-                // at this point, if player is null, return a basic information.
-                if (player == null)
-                {
-                    ret = $"======== Game Stats =========\n{match_date_time}\n{players_total}\n{players_counts}";
-                    return ret;
-                }
-
-                // Player exists. continue to parse player data.
-                var eliminations = replayData.Eliminations.Where(c => c.Eliminator == player.PlayerId.ToUpper()).ToList();
-
-                string game_result = "================\n";
-                if (eliminations.Count > 0)
-                {
-                    for (var i = 0; i < eliminations.Count(); i++)
-                    {
-                        var killedOn = DateTime.ParseExact(eliminations[i].Time, "mm:ss", null);
-
-                        var killedByBot = false;
-                        var playerKilled = replayData.PlayerData.Where(d => d.PlayerId == eliminations[i].EliminatedInfo.Id.ToUpper()).ToList();
-                        if (playerKilled.Count > 0 && playerKilled[0].IsBot)
-                        {
-                            killedByBot = true;
-                        }
-                        game_result += $"{FormNumber(i + 1)}: {killedOn.AddSeconds(offset):mm\\:ss} - {playerKilled[0].PlayerName}({(killedByBot ? "bot" : "human")})\n";
-                    }
-                }
-
-                var eliminated = replayData.Eliminations.Where(c => c.Eliminated == player.PlayerId.ToUpper()).ToList();
-                if (eliminated.Count > 0)
-                {
-                    var eliminator_data = replayData.PlayerData.Where(d => d.PlayerId == eliminated[0].EliminatorInfo.Id.ToUpper()).ToList();
-                    game_result += $"Eliminated by {eliminator_data[0].PlayerName}({(eliminator_data[0].IsBot ? "bot" : "human")}) at {eliminated[0].Time} ";
-                }
-                else
-                {
-                    game_result += "==== Victory Royale!! ====";
-                }
-                ret = $"======== Game Stats for {player.PlayerName} =========\n{match_date_time}\n{players_total}\n{players_counts}\nGame Results\n{game_result}";
-            }
-            return ret;
-        }
-
 
         /// <summary>
         /// リプレイデータをJSON形式で保存します。
@@ -218,7 +147,10 @@ namespace Fortnite_Replay_Parser_GUI
             var start_time = replayData.GameData.UtcTimeStartedMatch.Value.ToLocalTime();
             var started_at = $"{start_time}";
             var ended_at = $"{start_time.AddMilliseconds(Convert.ToInt32(replayData.Info.LengthInMs))}";
-            var duration = $"{replayData.Info.LengthInMs / 1000 / 60}:{replayData.Info.LengthInMs / 1000 % 60}";
+
+            // duration を "MM:SS" フォーマットにする（分は合計分数を表示）
+            var matchLength = TimeSpan.FromMilliseconds(replayData.Info.LengthInMs);
+            var duration = $"{(int)matchLength.TotalMinutes:D2}:{matchLength.Seconds:D2}";
 
 
             // プレイヤー集計
@@ -228,7 +160,7 @@ namespace Fortnite_Replay_Parser_GUI
             var bot_players = total_players - human_players;
 
             // Scriban テンプレートを使用
-            var template = Template.Parse(MatchResult.MatchStatTemplate);
+            var template = Template.Parse(Template_MatchResult.MatchStatTemplate);
 
             var model = new
             {
@@ -239,9 +171,8 @@ namespace Fortnite_Replay_Parser_GUI
                 human_players = human_players,
                 bot_players = bot_players,
                 player_name = player == null ? "" : player.PlayerName,
-                // game_result = game_result,
-                player_result = player == null ? "": RenderPlayerResultFromTemplate(player, offset),
-                system_info = SystemInfoHelper.GetSystemInfoText()
+                player_result = player == null ? "" : RenderPlayerResultFromTemplate(player, offset),
+                system_info = RenderSystemInfoFromTemplate()
             };
 
             return template.Render(model, member => member.Name);
@@ -285,7 +216,7 @@ namespace Fortnite_Replay_Parser_GUI
                 }).FirstOrDefault();
 
             // Scriban テンプレート
-            var template = Template.Parse(MatchResult.PlayerResultTemplate);
+            var template = Template.Parse(Template_MatchResult.PlayerResultTemplate);
 
             // FormNumber関数を Scriban に渡す
             var scriptObj = new Scriban.Runtime.ScriptObject();
@@ -295,11 +226,40 @@ namespace Fortnite_Replay_Parser_GUI
             scriptObj.SetValue("player_name", player.PlayerName, false);
             scriptObj.SetValue("eliminations", eliminations, false);
             scriptObj.SetValue("eliminated", eliminated, false);
+            scriptObj.SetValue("placement", player.Placement, false);
 
             var context = new Scriban.TemplateContext();
             context.PushGlobal(scriptObj);
 
             return template.Render(context);
+        }
+
+        /// <summary>
+        /// Template_SystemInfo.cs と SystemInfoHelper.cs を使って、Scriban でシステム情報をレンダリングして文字列で返します。
+        /// </summary>
+        public string RenderSystemInfoFromTemplate()
+        {
+            try
+            {
+                var template = Template.Parse(Template_MatchResult.SystemInfoTemplate);
+
+                var model = new
+                {
+                    os = SystemInfoHelper.GetOS(),
+                    cpu = SystemInfoHelper.GetCPU(),
+                    memory = SystemInfoHelper.GetMemory(),
+                    available_memory = SystemInfoHelper.GetAvailableMemory(),
+                    gpu = SystemInfoHelper.GetGPU(),
+                    resolution = SystemInfoHelper.GetResolution()
+                };
+
+                return template.Render(model, member => member.Name);
+            }
+            catch (Exception ex)
+            {
+                // 呼び出し側でログを取る想定。簡潔なエラーメッセージを返す。
+                return $"システム情報のレンダリングに失敗しました: {ex.Message}";
+            }
         }
     }
 }
