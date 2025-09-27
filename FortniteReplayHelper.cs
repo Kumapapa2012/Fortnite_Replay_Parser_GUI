@@ -225,6 +225,7 @@ namespace Fortnite_Replay_Parser_GUI
             // プロパティをcontextに追加
             scriptObj.SetValue("player_name", player.PlayerName, false);
             scriptObj.SetValue("eliminations", eliminations, false);
+            scriptObj.SetValue("elimination_count", eliminations.Count, false);
             scriptObj.SetValue("eliminated", eliminated, false);
             scriptObj.SetValue("placement", player.Placement, false);
 

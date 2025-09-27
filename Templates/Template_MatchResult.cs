@@ -18,12 +18,12 @@
 
         public static string PlayerResultTemplate = """
             ========= Player Results =========
-            Player : {{ player_name }} ({{ if is_bot }}bot{{ else }}human{{ end }}) eliminated:
+            Player : {{ player_name }} ({{ if is_bot }}bot{{ else }}human{{ end }}) eliminated {{ elimination_count }} players.
 
             {{ for elim in eliminations }}{{ fn_form_number elim.index }}: {{ elim.time }} - {{ elim.player_name }}({{ if elim.is_bot }}bot{{ else }}human{{ end }})
             {{ end }}
             {{ if eliminated }}{{ player_name }} was eliminated by {{ eliminated.player_name }}({{ if eliminated.is_bot }}bot{{ else }}human{{ end }}) at {{ eliminated.time }} (Placement: {{ fn_form_number placement }})
-            {{ else }}{{ if placement ==1 }} {{ player_name }} won the game!{{ else }}The replay ended before the match ends.
+            {{ else }}{{ if placement == 1 }} {{ player_name }} won the game!{{ else }}The replay ended before the match ends.
             {{ end }}{{ end }}
             """;
 
