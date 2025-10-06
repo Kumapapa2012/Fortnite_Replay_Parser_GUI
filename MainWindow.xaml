@@ -75,13 +75,26 @@
                HorizontalAlignment="Left" VerticalAlignment="Bottom"
                Margin="0,0,0,5" Height="26" Grid.RowSpan="2"/>
 
+
+        <!-- 下部固定領域: TimeAdjustment ボタン （左寄せ、Bottom固定） -->
+        <Button x:Name="btn_ApplyOffset" 
+                Grid.Column="1" 
+                Content="Apply" 
+                HorizontalAlignment="Left" 
+                Margin="249,0,0,0" 
+                Grid.Row="5" 
+                VerticalAlignment="Center" 
+                IsEnabled="False" 
+Click="Button_Click_btn_ApplyOffset"/>
+
+
         <!-- 下部固定領域: TimeAdjustment（左寄せ、Bottom固定） -->
         <TextBox x:Name="TimeAdjustment" 
                  Grid.Row="5" Grid.Column="1"
                  HorizontalAlignment="Left" VerticalAlignment="Top"
                  Margin="124,5,0,5" Width="120" Height="22"
                  HorizontalContentAlignment="Right"
-                 Text="0" TextChanged="TimeAdjustment_TextChanged"/>
+                 Text="0" TextChanged="TimeAdjustment_TextChanged" KeyDown="TimeAdjustment_KeyDown"/>
 
         <!-- 下部固定領域: Save ボタン（右寄せ・Bottom固定、右オフセットは列の右余白で確保） -->
         <Button x:Name="btn_SaveReplayJson" 

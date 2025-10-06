@@ -1,6 +1,7 @@
-﻿using System.Windows;
+﻿using Microsoft.Win32;
+using System.Windows;
 using System.Windows.Controls;
-using Microsoft.Win32;
+using System.Windows.Input;
 
 namespace Fortnite_Replay_Parser_GUI
 {
@@ -11,6 +12,7 @@ namespace Fortnite_Replay_Parser_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const bool V = true;
         String fnReplayDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\FortniteGame\\Saved\\Demos";
         String fnReplayFilePath;
 
@@ -172,13 +174,15 @@ namespace Fortnite_Replay_Parser_GUI
         {
             if (Int32.TryParse(TimeAdjustment.Text, out int offset))
             {
-                this.fnTimingOffset = offset;
-                e.Handled = true;
-                UpdateMatchResult();
-            }
-            else
-            {
-                e.Handled = false;
+                if (offset != this.fnTimingOffset)
+                {
+                    btn_ApplyOffset.IsEnabled = true;
+                    e.Handled = true;
+                }
+                else {
+                    btn_ApplyOffset.IsEnabled = false;
+                    e.Handled = false;
+                }
             }
         }
 
@@ -186,6 +190,32 @@ namespace Fortnite_Replay_Parser_GUI
         {
             var replayJSONFilePath = GetJSONFileSaveInteractive("replay.json", "JSON Files (*.json)|*.json");
             this.fortniteReplayHelper.SaveReplayAsJSON(replayJSONFilePath);
+        }
+
+        private void ApplyReplayOffset(System.Windows.Controls.TextBox TimeAdjustment)
+        {
+            if (Int32.TryParse(TimeAdjustment.Text, out int offset))
+            {
+                this.fnTimingOffset = offset;
+                UpdateMatchResult();
+                btn_ApplyOffset.IsEnabled = false;
+            }
+        }
+
+        private void Button_Click_btn_ApplyOffset(object sender, RoutedEventArgs e)
+        {
+            ApplyReplayOffset(TimeAdjustment);
+            e.Handled = true;
+        }
+
+        private void TimeAdjustment_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                // Apply the offset when Enter key is pressed
+                ApplyReplayOffset(TimeAdjustment);
+                e.Handled = true;
+            }
         }
     }
 }
