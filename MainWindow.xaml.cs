@@ -133,7 +133,7 @@ namespace Fortnite_Replay_Parser_GUI
         /// input is a valid integer.</remarks>
         /// <param name="sender">The source of the event, typically the combo box.</param>
         /// <param name="e">The event data containing information about the selection change.</param>
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Get PlayerData
             this.fnSelectedPlayer = (FortniteReplayHelper.ComboBoxItem_Player)cmb_Players_In_Replay.SelectedItem;
@@ -142,7 +142,7 @@ namespace Fortnite_Replay_Parser_GUI
             int offset = Int32.Parse(TimeAdjustment.Text);
 
             // Parse Data and update 
-            UpdateMatchResult();
+            await UpdateMatchResult();
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace Fortnite_Replay_Parser_GUI
         /// </summary>
         /// <remarks>This method retrieves match data for the selected player and updates the parsed
         /// result text. The selected player must not be null, and the player's ID must be valid.</remarks>
-        private void UpdateMatchResult()
+        private async Task UpdateMatchResult()
         {
             if (this.fortniteReplayHelper == null)
             {
@@ -158,7 +158,7 @@ namespace Fortnite_Replay_Parser_GUI
                 return;
             }
 
-            tb_Parse_Result.Text = this.fortniteReplayHelper.RenderMatchResultFromTemplate(fnSelectedPlayer?.getPlayer(), this.fnTimingOffset);
+            tb_Parse_Result.Text = await this.fortniteReplayHelper.RenderMatchResultFromTemplate(fnSelectedPlayer?.getPlayer(), this.fnTimingOffset);
         }
 
         /// <summary>
