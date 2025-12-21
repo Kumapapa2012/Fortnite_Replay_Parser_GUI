@@ -1,13 +1,15 @@
+using Fortnite_Replay_Parser_GUI.Services;
+using Fortnite_Replay_Parser_GUI.Templates;
 using FortniteReplayReader;
 using FortniteReplayReader.Models;
+using Scriban;
+using Scriban.Runtime;
 using System.IO;
+using System.Net.Http;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using Unreal.Core.Models.Enums;
-using Scriban;
-using Fortnite_Replay_Parser_GUI.Templates;
-using Scriban.Runtime;
 
 namespace Fortnite_Replay_Parser_GUI
 {
@@ -111,6 +113,38 @@ namespace Fortnite_Replay_Parser_GUI
         }
 
         /// <summary>
+        /// Fortnite API の SearchCosmeticsByIds を使い、与えられた cosmetics id から表示名を取得します。
+        /// （簡易なパーシングを行い、見つからない場合は id を返します）
+        /// </summary>
+        public async Task<string> GetCosmeticsNameAsync(string cosmeticId, string language = "en")
+        {
+            if (string.IsNullOrEmpty(cosmeticId)) return "Unknown";
+
+            try
+            {
+                using var http = new HttpClient() { BaseAddress = new Uri("https://fortnite-api.com/v2/") };
+                var api = new FortniteApiClient(http, disposeHttpClient: true);
+                var json = await api.SearchCosmeticsByIdsAsync(new List<string> { cosmeticId }, language);
+                if (string.IsNullOrEmpty(json)) return cosmeticId;
+
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array && data.GetArrayLength() > 0)
+                {
+                    var item = data[0];
+                    return item.GetProperty("name").GetString()??cosmeticId;
+                }
+            }
+            catch
+            {
+                // APIやパースエラーは無視して id を返す（必要ならログを追加）
+            }
+
+            return cosmeticId;
+        }
+
+        /// <summary>
         /// ComboBox用のプレイヤー選択アイテムを表します。
         /// </summary>
         public class ComboBoxItem_Player
@@ -137,7 +171,7 @@ namespace Fortnite_Replay_Parser_GUI
         /// <summary>
         /// Scribanテンプレートを使用して、マッチ結果をレンダリングし文字列として返します。
         /// </summary>
-        public string RenderMatchResultFromTemplate(PlayerData player, int offset)
+        public async Task<string> RenderMatchResultFromTemplate(PlayerData player, int offset)
         {
             var replayData = this.fnReplayData;
             if (replayData == null || !replayData.GameData.UtcTimeStartedMatch.HasValue) return "";
@@ -159,6 +193,9 @@ namespace Fortnite_Replay_Parser_GUI
             var human_players = playerData_except_NPCs.Count(o => !o.IsBot);
             var bot_players = total_players - human_players;
 
+            // Cosmetics名は非同期で取得して await する
+            var cosmeticsName = await GetCosmeticsNameAsync(player?.Cosmetics?.Character ?? "Unknown");
+
             // Scriban テンプレートを使用
             var template = Template.Parse(Template_MatchResult.MatchStatTemplate);
 
@@ -171,7 +208,8 @@ namespace Fortnite_Replay_Parser_GUI
                 human_players = human_players,
                 bot_players = bot_players,
                 player_name = player == null ? "" : player.PlayerName,
-                player_result = player == null ? "" : RenderPlayerResultFromTemplate(player, offset),
+                cosmetics_name = cosmeticsName,
+                player_result = player == null ? "" : await RenderPlayerResultFromTemplate(player, offset),
                 system_info = RenderSystemInfoFromTemplate()
             };
 
@@ -181,39 +219,53 @@ namespace Fortnite_Replay_Parser_GUI
         /// <summary>
         /// Scribanテンプレートを使用して、指定プレイヤーの戦績結果をレンダリングし文字列として返します。
         /// </summary>
-        public string RenderPlayerResultFromTemplate(PlayerData player, int offset)
+        public async Task<string> RenderPlayerResultFromTemplate(PlayerData player, int offset)
         {
             var replayData = this.fnReplayData;
-            if (replayData == null || player == null) return "";
+            if (replayData == null || player == null || player.PlayerId == null) return "";
 
             // eliminations: プレイヤーが倒した相手
-            var eliminations = replayData.Eliminations
+            var eliminations = await Task.WhenAll(
+                replayData.Eliminations
                 .Where(c => c.Eliminator == player.PlayerId.ToUpper())
-                .Select((elim, idx) =>
+                .Select(async (elim, idx) =>
                 {
                     var killed = replayData.PlayerData.FirstOrDefault(d => d.PlayerId == elim.EliminatedInfo.Id.ToUpper());
+                    // Cosmetics名は非同期で取得して await する
+                    var cosmeticsName_killed = await GetCosmeticsNameAsync(killed?.Cosmetics?.Character ?? "Unknown", "ja");
                     return new
                     {
                         time = DateTime.ParseExact(elim.Time, "mm:ss", null).AddSeconds(offset).ToString("mm:ss"),
                         player_name = killed?.PlayerName ?? "Unknown",
+                        cosmetics_name = cosmeticsName_killed,
                         is_bot = killed?.IsBot ?? false,
                         index = idx + 1
                     };
-                }).ToList();
+                })
+                .ToList()
+            );
 
             // eliminated: プレイヤーが倒された場合
-            var eliminated = replayData.Eliminations
+            var eliminatedElim = replayData.Eliminations
                 .Where(c => c.Eliminated == player.PlayerId.ToUpper())
-                .Select(elim =>
+                .FirstOrDefault();
+
+            object eliminated = null;
+            if (eliminatedElim != null)
+            {
+                var eliminator = replayData.PlayerData.FirstOrDefault(d => d.PlayerId == eliminatedElim.EliminatorInfo.Id.ToUpper());
+                var cosmeticsName_eliminator = await GetCosmeticsNameAsync(eliminator?.Cosmetics?.Character ?? "Unknown", "ja");
+                eliminated = new
                 {
-                    var eliminator = replayData.PlayerData.FirstOrDefault(d => d.PlayerId == elim.EliminatorInfo.Id.ToUpper());
-                    return new
-                    {
-                        time = DateTime.ParseExact(elim.Time, "mm:ss", null).AddSeconds(offset).ToString("mm:ss"),
-                        player_name = eliminator?.PlayerName ?? "Unknown",
-                        is_bot = eliminator?.IsBot ?? false
-                    };
-                }).FirstOrDefault();
+                    time = DateTime.ParseExact(eliminatedElim.Time, "mm:ss", null).AddSeconds(offset).ToString("mm:ss"),
+                    player_name = eliminator?.PlayerName ?? "Unknown",
+                    cosmetics_name = cosmeticsName_eliminator,
+                    is_bot = eliminator?.IsBot ?? false
+                };
+            }
+
+            // Cosmetics名は非同期で取得して await する
+            var cosmeticsName = await GetCosmeticsNameAsync(player?.Cosmetics?.Character ?? "Unknown", "ja");
 
             // Scriban テンプレート
             var template = Template.Parse(Template_MatchResult.PlayerResultTemplate);
@@ -224,8 +276,9 @@ namespace Fortnite_Replay_Parser_GUI
 
             // プロパティをcontextに追加
             scriptObj.SetValue("player_name", player.PlayerName, false);
+            scriptObj.SetValue("cosmetics_name", cosmeticsName, false);
             scriptObj.SetValue("eliminations", eliminations, false);
-            scriptObj.SetValue("elimination_count", eliminations.Count, false);
+            scriptObj.SetValue("elimination_count", eliminations.Length, false);
             scriptObj.SetValue("eliminated", eliminated, false);
             scriptObj.SetValue("placement", player.Placement, false);
 
