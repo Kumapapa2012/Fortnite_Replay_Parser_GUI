@@ -41,8 +41,11 @@ https://github.com/user-attachments/assets/b5b6e0a9-6308-4f13-a309-019bc38117e8
 ## License
 GNU AFFERO GENERAL PUBLIC LICENSE
 
-## Dependencies
+## Dependencies(Thank you!!!!)
 This project was made with:
 - FortniteReplayReader 
 	- Inside  FortniteReplayDecompressor
 	(https://fortnitereplaydecompressor.readthedocs.io/en/latest/?badge=latest)
+- Fortnite-API
+	- Costume name retrieval depends on This.
+   	(https://fortnite-api.com/)
