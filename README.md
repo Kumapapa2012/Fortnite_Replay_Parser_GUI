@@ -25,9 +25,13 @@ PS D:\Fortnite_Replay_Parser_GUI> .\bin\Release\net9.0-windows\win-x64\publish\F
 3. Parsed Result will have:
    - Match start and end time
    - Player's name
+	- Player's costume (if available, name locale is 'ja' only for now) 
    - Player's eliminations
    - Match result: Eliminated by X / Victory Royale.
 4. Adjust offset to change the timing of termination events in seconds.
+   - It can be used if you:
+	 - Want to record video from a bit earlier/later than the actual elimination time.
+	 - Want to sync the event timing with your video footage.
    - Accepts both positive/negative integer.
    - Useful for adjusting event timings on Video Recording. 
 5. Click "Save Replay Data as JSON..." to save the parsed result as a JSON file.
