@@ -1,51 +1,85 @@
-# Fortnite_Replay_Parser_GUI
-Displays match result from local saved replay file.
-Results include player's name, eliminations, match start and end time, and match result.
+# Fortnite Replay Parser GUI
 
-Timestamps in Result can be used for Youtube video description.
-Please feel free to folk and customise this code.
+## Description
 
-## Building
-Make sure you have .NET 9.0 SDK or later installed.
+A web-based GUI application that parses Fortnite `.replay` files and extracts match statistics. Built with ASP.NET Core (C#) on the backend and vanilla HTML/CSS/JavaScript on the frontend, it runs locally at `http://localhost:12345`.
 
-Download the source code and open it in Visual Studio 2022 or later and build the solution in Release mode to generate the executable file.
+### Features
 
-Or you can use the command line to start:
- 
+- Upload and parse Fortnite `.replay` files via a browser-based interface
+- View match start/end times and duration
+- Browse all players in a match (with bot/human distinction)
+- Display player eliminations with timestamps
+- Show player cosmetics (skin names) retrieved from [Fortnite-API](https://fortnite-api.com/)
+- Adjust elimination timestamps with a time offset for video recording synchronization
+- Display local system information (OS, CPU, GPU, RAM, resolution)
+- Export full replay data as JSON
+
+## Dependencies
+
+### Runtime
+
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/) or later
+
+### NuGet Packages
+
+| Package | Version | Description |
+|---------|---------|-------------|
+| [FortniteReplayReader](https://github.com/Shiqan/FortniteReplayReader) | 2.4.0 | Reads and parses Fortnite `.replay` binary files |
+| [Newtonsoft.Json](https://www.newtonsoft.com/json) | 13.0.1 | JSON serialization/deserialization |
+| [Scriban](https://github.com/scriban/scriban) | 6.3.0 | Lightweight text templating engine |
+
+### External APIs
+
+- [Fortnite-API](https://fortnite-api.com/) — Used to retrieve cosmetic/skin display names
+
+### Development / Testing
+
+| Package | Version | Description |
+|---------|---------|-------------|
+| [xUnit](https://xunit.net/) | 2.9.3 | Unit testing framework |
+| [RichardSzalay.MockHttp](https://github.com/richardszalay/mockhttp) | 7.0.0 | Mock HTTP handler for unit tests |
+
+## Setup
+
+### Prerequisites
+
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) or later
+- Windows (system information retrieval uses PowerShell)
+
+### Build and Run
+
+Clone the repository and publish:
+
+```bash
+git clone https://github.com/Kumapapa2012/Fortnite_Replay_Parser_GUI.git
+cd Fortnite_Replay_Parser_GUI
+dotnet publish
 ```
-PS D:\> git clone git@github.com:Kumapapa2012/Fortnite_Replay_Parser_GUI.git
-PS D:\Fortnite_Replay_Parser_GUI> cd Fortnite_Replay_Parser_GUI
-PS D:\Fortnite_Replay_Parser_GUI> dotnet publish
-PS D:\Fortnite_Replay_Parser_GUI> .\bin\Release\net9.0-windows\win-x64\publish\Fortnite_Replay_Parser_GUI.exe
+
+Run the executable:
+
+```bash
+.\bin\Release\net9.0\publish\Fortnite_Replay_Parser_GUI.exe
 ```
 
-## Usage
-1. Click [...] and Pick a Replay File using File Dialog.
-2. Select a player to get match data from the dropdown list.
-3. Parsed Result will have:
-   - Match start and end time
-   - Player's name
-	- Player's costume (if available, name locale is 'ja' only for now) 
-   - Player's eliminations
-   - Match result: Eliminated by X / Victory Royale.
-4. Adjust offset to change the timing of termination events in seconds.
-   - It can be used if you:
-	 - Want to record video from a bit earlier/later than the actual elimination time.
-	 - Want to sync the event timing with your video footage.
-   - Accepts both positive/negative integer.
-   - Useful for adjusting event timings on Video Recording. 
-5. Click "Save Replay Data as JSON..." to save the parsed result as a JSON file.
+Alternatively, open `Fortnite_Replay_Parser_GUI.sln` in Visual Studio 2022 or later and build/run from the IDE.
 
-https://github.com/user-attachments/assets/b5b6e0a9-6308-4f13-a309-019bc38117e8
+### Usage
 
-## License
-GNU AFFERO GENERAL PUBLIC LICENSE
+1. Open `http://localhost:12345` in your browser.
+2. Click the file selector and choose a `.replay` file.
+3. Select a player from the dropdown list.
+4. View the parsed match result including eliminations, placement, and system info.
+5. Adjust the time offset (positive or negative seconds) to shift elimination timestamps for video editing.
+6. Click **Save Replay Data as JSON** to export the full replay data.
 
-## Dependencies(Thank you!!!!)
-This project was made with:
-- FortniteReplayReader 
-	- Inside  FortniteReplayDecompressor
-	(https://fortnitereplaydecompressor.readthedocs.io/en/latest/?badge=latest)
-- Fortnite-API
-	- Costume name retrieval depends on This.
-   	(https://fortnite-api.com/)
+### Running Tests
+
+```bash
+dotnet test
+```
+
+## Licence
+
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE.txt).
