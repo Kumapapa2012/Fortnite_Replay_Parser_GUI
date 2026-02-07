@@ -32,6 +32,14 @@ namespace Fortnite_Replay_Parser_GUI
         }
 
         /// <summary>
+        /// リプレイデータオブジェクトを取得します（JSON エクスポート用）。
+        /// </summary>
+        public FortniteReplay GetReplayData()
+        {
+            return this.fnReplayData;
+        }
+
+        /// <summary>
         /// 数値を順位表記（1st, 2nd, 3rd, ...）の文字列に変換します。
         /// </summary>
         public static string FormNumber(int num)
@@ -107,7 +115,6 @@ namespace Fortnite_Replay_Parser_GUI
             catch (Exception ex)
             {
                 // 必要に応じてログ出力や例外の再スローを行う
-                // 例: Console.WriteLine($"JSON保存エラー: {ex.Message}");
                 throw new IOException("リプレイデータのJSON保存中にエラーが発生しました。", ex);
             }
         }
@@ -145,33 +152,9 @@ namespace Fortnite_Replay_Parser_GUI
         }
 
         /// <summary>
-        /// ComboBox用のプレイヤー選択アイテムを表します。
-        /// </summary>
-        public class ComboBoxItem_Player
-        {
-            private string _label;
-            private PlayerData _player;
-
-            public ComboBoxItem_Player(string label, PlayerData player)
-            {
-                _label = label;
-                _player = player;
-            }
-            public PlayerData getPlayer()
-            {
-                return _player;
-            }
-
-            public override string ToString()
-            {
-                return _label;
-            }
-        }
-
-        /// <summary>
         /// Scribanテンプレートを使用して、マッチ結果をレンダリングし文字列として返します。
         /// </summary>
-        public async Task<string> RenderMatchResultFromTemplate(PlayerData player, int offset)
+        public async Task<string> RenderMatchResultFromTemplate(PlayerData? player, int offset)
         {
             var replayData = this.fnReplayData;
             if (replayData == null || !replayData.GameData.UtcTimeStartedMatch.HasValue) return "";
@@ -250,7 +233,7 @@ namespace Fortnite_Replay_Parser_GUI
                 .Where(c => c.Eliminated == player.PlayerId.ToUpper())
                 .FirstOrDefault();
 
-            object eliminated = null;
+            object? eliminated = null;
             if (eliminatedElim != null)
             {
                 var eliminator = replayData.PlayerData.FirstOrDefault(d => d.PlayerId == eliminatedElim.EliminatorInfo.Id.ToUpper());
