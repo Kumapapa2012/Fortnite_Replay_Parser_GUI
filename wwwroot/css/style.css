@@ -179,6 +179,10 @@ button:disabled {
     z-index: 1000;
 }
 
+.loading[hidden] {
+    display: none;
+}
+
 .spinner {
     width: 24px;
     height: 24px;
