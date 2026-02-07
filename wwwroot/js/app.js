@@ -14,11 +14,11 @@ let currentOffset = 0;
 
 // --- ローディング表示 ---
 function showLoading() {
-    loading.hidden = false;
+    loading.classList.add("active");
 }
 
 function hideLoading() {
-    loading.hidden = true;
+    loading.classList.remove("active");
 }
 
 // --- Step 1: リプレイファイルのアップロード ---
