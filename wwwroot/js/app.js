@@ -6,11 +6,44 @@ const parseResult = document.getElementById("parseResult");
 const timeAdjustment = document.getElementById("timeAdjustment");
 const btnApplyOffset = document.getElementById("btnApplyOffset");
 const btnSaveJson = document.getElementById("btnSaveJson");
+const btnCopyResult = document.getElementById("btnCopyResult");
 const loading = document.getElementById("loading");
 
 // --- 状態 ---
 let currentSessionId = null;
 let currentOffset = 0;
+
+// --- コピーボタンの状態更新 ---
+function updateCopyButton() {
+    btnCopyResult.disabled = !parseResult.textContent;
+}
+
+// --- コピーボタン ---
+btnCopyResult.addEventListener("click", async () => {
+    try {
+        await navigator.clipboard.writeText(parseResult.textContent);
+        const original = btnCopyResult.textContent;
+        btnCopyResult.textContent = "Copied!";
+        setTimeout(() => {
+            btnCopyResult.textContent = original;
+        }, 2000);
+    } catch {
+        // clipboard API が使えない場合のフォールバック
+        const textarea = document.createElement("textarea");
+        textarea.value = parseResult.textContent;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        const original = btnCopyResult.textContent;
+        btnCopyResult.textContent = "Copied!";
+        setTimeout(() => {
+            btnCopyResult.textContent = original;
+        }, 2000);
+    }
+});
 
 // --- ローディング表示 ---
 function showLoading() {
@@ -33,6 +66,7 @@ replayFileInput.addEventListener("change", async (e) => {
     playerSelect.innerHTML = '<option value="-1">-- 読み込み中... --</option>';
     playerSelect.disabled = true;
     parseResult.textContent = "";
+    updateCopyButton();
     btnSaveJson.hidden = true;
     btnApplyOffset.disabled = true;
     timeAdjustment.value = "0";
@@ -71,6 +105,7 @@ replayFileInput.addEventListener("change", async (e) => {
         await fetchResult(-1, 0);
     } catch (err) {
         parseResult.textContent = "エラー: " + err.message;
+        updateCopyButton();
     } finally {
         hideLoading();
     }
@@ -112,8 +147,10 @@ async function fetchResult(playerIndex, offset) {
 
         const data = await resp.json();
         parseResult.textContent = data.result;
+        updateCopyButton();
     } catch (err) {
         parseResult.textContent = "エラー: " + err.message;
+        updateCopyButton();
     }
 }
 

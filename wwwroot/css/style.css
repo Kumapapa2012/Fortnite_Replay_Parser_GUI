@@ -95,6 +95,14 @@ select:disabled {
     margin: 8px 0;
     min-height: 200px;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.result-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 4px;
 }
 
 #parseResult {
