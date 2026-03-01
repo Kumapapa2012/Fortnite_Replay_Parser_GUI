@@ -257,6 +257,41 @@ namespace Fortnite_Replay_Parser_GUI
             var scriptObj = new Scriban.Runtime.ScriptObject();
             scriptObj.Import("fn_form_number", new Func<int, string>(FormNumber));
 
+            // プレイヤーの最後のロケーションを取得して JSON 文字列変数にする。
+            // ロケーションがない場合はデフォルトの Unknown JSON を使用する。
+            string lastLocationJson;
+            const string unknownLocationJson = "{\"x\":\"Unknown\", \"y\":\"Unknown\", \"z\":\"Unknown\"}";
+            if (player?.Locations != null && player.Locations.Count > 0)
+            {
+                var last = player.Locations[^1];
+                var loc = last?.ReplicatedMovement?.Location;
+                if (loc != null)
+                {
+                    try
+                    {
+                        var jsonOptions = new JsonSerializerOptions
+                        {
+                            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+                            NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                            WriteIndented = false
+                        };
+                        lastLocationJson = JsonSerializer.Serialize(loc, jsonOptions);
+                    }
+                    catch
+                    {
+                        lastLocationJson = unknownLocationJson;
+                    }
+                }
+                else
+                {
+                    lastLocationJson = unknownLocationJson;
+                }
+            }
+            else
+            {
+                lastLocationJson = unknownLocationJson;
+            }
+
             // プロパティをcontextに追加
             scriptObj.SetValue("player_name", player.PlayerName, false);
             scriptObj.SetValue("cosmetics_name", cosmeticsName, false);
@@ -264,6 +299,7 @@ namespace Fortnite_Replay_Parser_GUI
             scriptObj.SetValue("elimination_count", eliminations.Length, false);
             scriptObj.SetValue("eliminated", eliminated, false);
             scriptObj.SetValue("placement", player.Placement, false);
+            scriptObj.SetValue("last_location", lastLocationJson, false);
 
             var context = new Scriban.TemplateContext();
             context.PushGlobal(scriptObj);

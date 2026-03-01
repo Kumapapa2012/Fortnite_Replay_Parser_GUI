@@ -25,6 +25,7 @@
             {{ if eliminated }}{{ player_name }} was eliminated by {{ eliminated.player_name }}[{{ eliminated.cosmetics_name }}]({{ if eliminated.is_bot }}bot{{ else }}human{{ end }}) at {{ eliminated.time }} (Placement: {{ fn_form_number placement }})
             {{ else }}{{ if placement == 1 }} {{ player_name }} won the game!{{ else }}The replay ended before the match ends.
             {{ end }}{{ end }}
+            The last location info: {{ last_location }}
             """;
 
         public static string SystemInfoTemplate = """
